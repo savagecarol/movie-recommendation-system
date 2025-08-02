@@ -1,28 +1,46 @@
 import pandas as pd
 import pickle
 import streamlit as st
+from huggingface_hub import hf_hub_download
 
+REPO_ID = "savagecarol/movie-recommendation-system"
+BRANCH = "main"
 
-movie_dict = pickle.load(open('movies.pkl' , 'rb'))
-similarity = pickle.load(open('similarity.pkl' , 'rb'))
+# Download files from Hugging Face
+movies_path = hf_hub_download(repo_id=REPO_ID, filename="movies.pkl", repo_type="dataset", revision=BRANCH)
+similarity_path = hf_hub_download(repo_id=REPO_ID, filename="similarity.pkl", repo_type="dataset", revision=BRANCH)
+
+# Load data
+with open(movies_path, 'rb') as f:
+    movie_dict = pickle.load(f)
+
+with open(similarity_path, 'rb') as f:
+    similarity = pickle.load(f)
 
 movies = pd.DataFrame(movie_dict)
 
-def reccommend(name):
-    index = movies[movies['title'] == name].index[0]
+# Recommend function
+def recommend(movie_title):
+    try:
+        index = movies[movies['title'] == movie_title].index[0]
+    except IndexError:
+        return []
+
     distance = similarity[index]
-    movies_list = sorted(list(enumerate(distance)),reverse = True , key = lambda x:x[1])[1:6]
-    recommend_movies = []
-    for i in movies_list:
-        recommend_movies.append(movies.iloc[i[0]].title)
-    return recommend_movies
+    movie_list = sorted(list(enumerate(distance)), key=lambda x: x[1], reverse=True)[1:6]
+    recommended = [movies.iloc[i[0]].title for i in movie_list]
+    return recommended
 
-### UI
+# Streamlit UI
+st.title('🎬 Movie Recommender System')
 
-st.title('Movie recommender System')
-selected_name = st.selectbox('Choose movie' , movies['title'].values)
+selected_movie = st.selectbox('Choose a movie', movies['title'].values)
+
 if st.button('Recommend'):
-    recommend_list = reccommend(selected_name)
-    st.write(recommend_list)
-
-
+    recommendations = recommend(selected_movie)
+    if recommendations:
+        st.subheader("You might also like:")
+        for movie in recommendations:
+            st.write("👉", movie)
+    else:
+        st.warning("No recommendations found.")
