@@ -1,0 +1,19 @@
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Ignore data files (they're on Hugging Face now)
+movies.pkl
+similarity.pkl
+
+# Ignore virtual environments
+env/
+venv/
+.venv/
+
+# Ignore OS/system files
+.DS_Store
+
+# Ignore Hugging Face cache (optional)
+~/.cache/huggingface/
